@@ -159,6 +159,7 @@ fn default_primitives() -> HashMap<Symbol, Primitive> {
         ("*", prim!(|a: I64, b: I64| -> I64 { a * b })),
         ("max", prim!(|a: I64, b: I64| -> I64 { a.max(b) })),
         ("min", prim!(|a: I64, b: I64| -> I64 { a.min(b) })),
+        ("~", prim!(|a: I64, b: I64| -> I64 { if a == b {1} else {0} })),
     ]
     .into_iter()
     .map(|(k, v)| (Symbol::from(k), v))
