@@ -45,7 +45,7 @@ impl Display for Id {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Command {
     Datatype {
         name: Symbol,
