@@ -74,21 +74,21 @@ pub struct Variant {
     pub types: Vec<InputType>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InputType {
     Sort(Symbol),
     NumType(NumType),
     String,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum NumType {
     // F64,
     I64,
     Rational,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OutputType {
     Unit,
     Type(InputType),
