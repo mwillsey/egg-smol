@@ -25,6 +25,14 @@ regex = "1"
 # TODO should be dev dependency, but easier to just log for now
 env_logger = "0.9"
 
+[dev-dependencies]
+criterion = { version = "0.3", features = ["html_reports"] }
+ascent = "0.3.0"
+
+[[bench]]
+name = "transitive_closure"
+harness = false
+
 [build-dependencies]
 lalrpop = "0.19.7"
 

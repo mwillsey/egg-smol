@@ -760,7 +760,8 @@ impl EGraph {
         })
     }
 
-    fn run_program(&mut self, program: Vec<Command>) -> Result<Vec<String>, Error> {
+    /// Execute the given sequence of [`Command`]s in order.
+    pub fn run_program(&mut self, program: Vec<Command>) -> Result<Vec<String>, Error> {
         let mut msgs = vec![];
         let should_run = true;
 
@@ -782,12 +783,19 @@ impl EGraph {
     }
 
     pub fn parse_and_run_program(&mut self, input: &str) -> Result<Vec<String>, Error> {
-        let parser = ast::parse::ProgramParser::new();
-        let program = parser
-            .parse(input)
-            .map_err(|e| e.map_token(|tok| tok.to_string()))?;
-        self.run_program(program)
+        self.run_program(parse_program(input)?)
     }
+}
+
+/// Parse the program string into a sequence of [`Command`]s.
+///
+/// This method is currently only used during benchmarking to separate out
+/// the time spent parsing from the time spent during execution.
+pub fn parse_program(input: &str) -> Result<Vec<Command>, Error> {
+    let parser = ast::parse::ProgramParser::new();
+    parser
+        .parse(input)
+        .map_err(|e| e.map_token(|tok| tok.to_string()).into())
 }
 
 #[derive(Debug, Error)]
