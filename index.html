@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        #editor {
+            width: 60%;
+            resize: horizontal;
+            overflow: auto;
+        }
+
+        #editor .CodeMirror {
+            width: 100%;
+            height: 100%;
+        }
+
+        #panel {
+            padding: 10px;
+            flex: 1 1 0;
+            border-left: 2px solid gray;
+
+            display: flex;
+            flex-flow: column;
+        }
+
+        #toolbar button {
+            margin-right: 5px;
+        }
+
+        #output {
+            font-family: monospace;
+            margin-top: 10px;
+            flex-grow: 1;
+        }
+    </style>
+
+    <link rel="stylesheet" href="//unpkg.com/codemirror@5.65.2/lib/codemirror.css">
+    <script src="//unpkg.com/codemirror@5.65.2/lib/codemirror.js"></script>
+
+    <script>
+        let editor, output, examples;
+
+        console.log("Main script is running");
+        let worker = new Worker("worker.js");
+        worker.onmessage = function (message) {
+            console.log("got message", message);
+            output.innerHTML = message.data;
+        }
+
+        window.onpopstate = function (event) {
+            console.log(event)
+            loadEditor()
+        }
+
+        function loadEditor() {
+            let url = new URL(location);
+            let example = url.searchParams.get("example");
+            let program = url.searchParams.get("program");
+            if (example) {
+                if (examples[example]) {
+                    editor.setValue(examples[example]);
+                } else {
+                    console.warn("Bad example choice", example, "choices: ", Object.keys(examples));
+                }
+            } else if (program) {
+                editor.setValue(program);
+            }
+        }
+
+        function run() {
+            let program = editor.getValue();
+            worker.postMessage(program);
+            console.log("posted a message to worker!")
+            output.textContent = "running..."
+        }
+
+        function pushState() {
+            let url = new URL(location);
+            url.searchParams.delete("program");
+            url.searchParams.delete("example");
+
+            let state;
+            let content = editor.getValue();
+            for (let ex in examples) {
+                if (content == examples[ex]) {
+                    state = ex;
+                    url.searchParams.set("example", ex);
+                    break;
+                }
+            }
+
+            if (!state) {
+                state = content;
+                url.searchParams.set("program", content);
+            }
+
+            if (history.state != state) {
+                history.pushState(state, "", url)
+            }
+        }
+
+        window.onload = async function () {
+            examples = await fetch("examples.json").then(r => r.json());
+            let select = document.getElementById("examples");
+            for (name in examples) {
+                let node = document.createElement("option");
+                node.value = name;
+                node.innerHTML = name;
+                select.appendChild(node);
+            }
+
+            select.onchange = function () {
+                console.log("Loading example", select.value);
+
+                if (select.value) {
+                    editor.setValue(examples[select.value]);
+                    pushState()
+                }
+                select.value = "";
+            };
+
+            output = document.getElementById("output");
+            editor = CodeMirror(document.getElementById("editor"), {
+                lineNumbers: true,
+                extraKeys: {
+                    "Ctrl-Enter": run,
+                }
+            });
+
+            loadEditor()
+        }
+
+    </script>
+</head>
+
+<body>
+    <div id="editor"></div>
+    <div id="panel">
+        <div id="toolbar">
+            <button onclick="run()">Run</button>
+            <button onclick="pushState()">Share</button>
+
+            <!-- <label for="examples">Examples:</label> -->
+            <select name="examples" id="examples">
+                <option value=""> Load an example </option>
+            </select>
+        </div>
+        <div id="output">
+            Click "Run" to run code
+        </div>
+    </div>
+</body>
+
+</html>
